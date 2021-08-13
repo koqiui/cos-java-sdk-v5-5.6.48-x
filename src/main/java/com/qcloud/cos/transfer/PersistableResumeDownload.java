@@ -15,7 +15,6 @@
  * According to cos feature, we modify some class，comment, field name, etc.
  */
 
-
 package com.qcloud.cos.transfer;
 
 import java.io.File;
@@ -26,121 +25,119 @@ import java.util.HashMap;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * An opaque token that holds some private state and can be used to resume a
- * download operation.
+ * An opaque token that holds some private state and can be used to resume a download operation.
  */
 public class PersistableResumeDownload extends PersistableTransfer {
 
-    static final String TYPE = "resumedownload";
+	static final String TYPE = "resumedownload";
 
-    @JsonProperty
-    private final String pauseType = TYPE;
+	@JsonProperty
+	private final String pauseType = TYPE;
 
-    /** The last modified time stamp of the object int Qcloud COS to be downloaded. */
-    @JsonProperty
-    private final long lastModified;
+	/** The last modified time stamp of the object int Qcloud COS to be downloaded. */
+	@JsonProperty
+	private final long lastModified;
 
-    /** The contentLength of the object in Qcloud COS to be downloaded. */
-    @JsonProperty
-    private final String contentLength;
+	/** The contentLength of the object in Qcloud COS to be downloaded. */
+	@JsonProperty
+	private final String contentLength;
 
-    /** The etag of the object in Qcloud COS to be downloaded. */
-    @JsonProperty
-    private final String etag;
+	/** The etag of the object in Qcloud COS to be downloaded. */
+	@JsonProperty
+	private final String etag;
 
-    /** The crc64ecma header of the object in Qcloud COS to be downloaded. */
-    @JsonProperty
-    private final String crc64ecma;
+	/** The crc64ecma header of the object in Qcloud COS to be downloaded. */
+	@JsonProperty
+	private final String crc64ecma;
 
-    @JsonProperty
-    private final HashMap<String, Integer> downloadedBlocks;
+	@JsonProperty
+	private final HashMap<String, Integer> downloadedBlocks;
 
-    private File dumpFile;
+	private File dumpFile;
 
-    public PersistableResumeDownload() {
-        this(0, null, null, null, null);
-    }
+	public PersistableResumeDownload() {
+		this(0, null, null, null, null);
+	}
 
-    public PersistableResumeDownload(
-            @JsonProperty(value = "lastModified") long lastModified,
-            @JsonProperty(value = "contentLength") String contentLength,
-            @JsonProperty(value = "etag") String etag,
-            @JsonProperty(value = "crc64ecma") String crc64ecma,
-            @JsonProperty(value = "downloadedBlocks") HashMap<String, Integer> downloadedBlocks) {
-        this.lastModified = lastModified;
-        this.contentLength = contentLength;
-        this.etag = etag;
-        this.crc64ecma = crc64ecma;
-        this.downloadedBlocks = downloadedBlocks;
-    }
+	public PersistableResumeDownload(@JsonProperty(value = "lastModified") long lastModified, @JsonProperty(value = "contentLength") String contentLength, @JsonProperty(value = "etag") String etag,
+			@JsonProperty(value = "crc64ecma") String crc64ecma, @JsonProperty(value = "downloadedBlocks") HashMap<String, Integer> downloadedBlocks) {
+		this.lastModified = lastModified;
+		this.contentLength = contentLength;
+		this.etag = etag;
+		this.crc64ecma = crc64ecma;
+		this.downloadedBlocks = downloadedBlocks;
+	}
 
-    /**
-     * Returns the lastModified of the object.
-     */
-    long getLastModified() {
-        return lastModified;
-    }
+	/**
+	 * Returns the lastModified of the object.
+	 */
+	long getLastModified() {
+		return lastModified;
+	}
 
-    /**
-     * Returns the content length of the object.
-     */
-    String getContentLength() {
-        return contentLength;
-    }
+	/**
+	 * Returns the content length of the object.
+	 */
+	String getContentLength() {
+		return contentLength;
+	}
 
-    /**
-     * Returns the etag of the object.
-     */
-    String getEtag() {
-        return etag;
-    }
+	/**
+	 * Returns the etag of the object.
+	 */
+	String getEtag() {
+		return etag;
+	}
 
-    /**
-     * Returns the crc64ecma of the object to download.
-     */
-    String getCrc64ecma() {
-        return crc64ecma;
-    }
+	/**
+	 * Returns the crc64ecma of the object to download.
+	 */
+	String getCrc64ecma() {
+		return crc64ecma;
+	}
 
-    /**
-     * Returns the optional response headers.
-     */
-    HashMap<String, Integer> getDownloadedBlocks() {
-        return downloadedBlocks;
-    }
+	/**
+	 * Returns the optional response headers.
+	 */
+	HashMap<String, Integer> getDownloadedBlocks() {
+		return downloadedBlocks;
+	}
 
-    /**
-     * Put a downloaded block.
-     * @param block
-     */
-    public synchronized void putDownloadedBlocks(String block) {
-        downloadedBlocks.put(block, 1);
-    }
+	/**
+	 * Put a downloaded block.
+	 * 
+	 * @param block
+	 */
+	public synchronized void putDownloadedBlocks(String block) {
+		downloadedBlocks.put(block, 1);
+	}
 
-    /**
-     * Return true if block is in downloadedBlocks, false else.
-     * @param block
-     * @return
-     */
-    public synchronized boolean hasDownloadedBlocks(String block) {
-        return downloadedBlocks.getOrDefault(block, 0) == 1;
-    }
+	/**
+	 * Return true if block is in downloadedBlocks, false else.
+	 * 
+	 * @param block
+	 * @return
+	 */
+	public synchronized boolean hasDownloadedBlocks(String block) {
+		Integer blocks = downloadedBlocks.get(block);
+		return blocks == null ? false : blocks.intValue() == 1;
+	}
 
-    public synchronized void reset() {
-        downloadedBlocks.clear();
-    }
+	public synchronized void reset() {
+		downloadedBlocks.clear();
+	}
 
-    public void setDumpFile(File dumpFile) {
-        this.dumpFile = dumpFile;
-    }
+	public void setDumpFile(File dumpFile) {
+		this.dumpFile = dumpFile;
+	}
 
-    public File getDumpFile() {
-        return this.dumpFile;
-    }
+	public File getDumpFile() {
+		return this.dumpFile;
+	}
 
-    public synchronized void dump() throws Exception {
-        OutputStream out = new FileOutputStream(dumpFile);
-        this.serialize(out);
-        out.close();
-    }
+	public synchronized void dump() throws Exception {
+		OutputStream out = new FileOutputStream(dumpFile);
+		this.serialize(out);
+		out.close();
+	}
 }
